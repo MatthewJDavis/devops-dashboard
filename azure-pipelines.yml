@@ -20,5 +20,5 @@ steps:
 
 - task: PowerShell@2
   inputs:
-    filePath: '.\build.ps1'
+    filePath: 'build.ps1'
     arguments: 'Task=Default'
