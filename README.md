@@ -6,7 +6,7 @@ PowerShell Universal dashboard displaying Azure DevOps data
 
 A dashboard that displays information from my Azure DevOps organisation. Inspired by the Pluralsight course [PowerShell DevOps Playbook].
 
-[PowerShell DevOps Playbook]: https://app.pluralsight.com/library/courses/powershell-devops-playbook/table-of-contents
+![dashboard](images/dashboard.png)
 
 ## Authentication
 
@@ -14,5 +14,5 @@ A Personal Access Token is required to interact with the Azure DevOps API. This 
 For the dashboard, 'build read' permission is enough.
 
 
-
+[PowerShell DevOps Playbook]: https://app.pluralsight.com/library/courses/powershell-devops-playbook/table-of-contents
 [Microsoft documentation]: https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=preview-page
