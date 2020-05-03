@@ -37,8 +37,23 @@ $BuildDataRefresh = New-UDEndpoint -Schedule $Schedule -Endpoint {
 
 #region Dashboard components
 $projectSelect = New-UDSelect -Label "Project" -Id 'projectSelect' -Option {
+    $SelectionList = [System.Collections.Generic.List[pscustomobject]]::new()
+    $default =[pscustomobject]@{
+        'Name' = 'Select Project'
+        'Value' = 'default'
+    }
+    $SelectionList.Add($default)
     foreach ($project in $cache:projectListSorted) {
-        New-UDSelectOption -Name $project.name -Value "$($project.id)"
+        $SelectionList.Add(
+            [pscustomobject]@{
+                'Name' = $project.name
+                'Value' = "$($project.id)"
+            }
+        )
+    }
+
+    foreach($item in $SelectionList){
+        New-UDSelectOption -Name $item.Name -Value $($item.Value)
     }
 } -OnChange {
     $Session:Projectid = $eventData
