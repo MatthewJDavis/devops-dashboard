@@ -14,7 +14,7 @@ $Cache:projectListSorted = $projectList.value | Sort-Object -Property name
 $Schedule = New-UDEndpointSchedule -Every 5 -Minute
 $BuildDataRefresh = New-UDEndpoint -Schedule $Schedule -Endpoint {
     $Cache:dataList = [System.Collections.Generic.List[pscustomobject]]::new()
-    
+
     foreach ($project in $Cache:projectListSorted) {
         $BuildURI = "$uri/$($project.id)/_apis/build/builds?api-version=5.1"
         $buildList = Invoke-RestMethod -Uri $BuildURI -Headers $Headers
@@ -26,7 +26,7 @@ $BuildDataRefresh = New-UDEndpoint -Schedule $Schedule -Endpoint {
                     'StartTime'   = $build.StartTime
                     'FinishTime'  = $build.FinishTime
                     'Result'      = $build.result
-                    'Commit'      = (New-UDLink -Text $($build.sourceVersion.Substring(0, 6)) -Url $($build._links.sourceVersionDisplayUri.href)) 
+                    'Commit'      = (New-UDLink -Text $($build.sourceVersion.Substring(0, 6)) -Url $($build._links.sourceVersionDisplayUri.href))
                 }
             )
         }
