@@ -1,4 +1,7 @@
 $OrgName = 'matthewjdavis111'
+if($null -eq $env:PAT) {
+    throw 'No Personal Access Token environment variable set. Set with $env:PAT="token"'
+}
 $PAToken = $env:PAT
 $uri = "https://dev.azure.com/$OrgName"
 $Headers = @{Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$($PAToken)")) }
