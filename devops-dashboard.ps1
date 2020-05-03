@@ -45,11 +45,11 @@ $projectSelect = New-UDSelect -Label "Project" -Id 'projectSelect' -Option {
     Sync-UDElement -Id 'grid'
 }
 
-$grid = New-UDGrid -Id 'grid' -Title 'Build Info' -Endpoint {
+$grid = New-UDGrid -Id 'grid' -Title "Build Information" -Headers @('Build Number', 'Start Time', 'Finish Time', 'Result', 'Commit') -Properties @('BuildNumber', 'StartTime', 'FinishTime', 'Result', 'Commit') -Endpoint {
     $Cache:dataList | Where-Object -Property 'Projectid' -EQ $Session:Projectid | Out-UDGridData
 }
 #endregion
 
 
-$dashboard = New-UDDashboard -Title 'Azure DevOps Builds' -Content { $projectSelect, $grid } -EndpointInitialization $Init
+$dashboard = New-UDDashboard -Title "Azure DevOps $OrgName" -Content { $projectSelect, $grid } -EndpointInitialization $Init
 Start-UDDashboard -Dashboard $dashboard -Endpoint $BuildDataRefresh -Port 10001
