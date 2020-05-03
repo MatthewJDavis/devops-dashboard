@@ -1,5 +1,5 @@
 $OrgName = 'matthewjdavis111'
-if($null -eq $env:PAT) {
+if ($null -eq $env:PAT) {
     throw 'No Personal Access Token environment variable set. Set with $env:PAT="token"'
 }
 $PAToken = $env:PAT
@@ -16,7 +16,7 @@ $Cache:projectListSorted = $projectList.value | Sort-Object -Property name
 #region update build data
 $Schedule = New-UDEndpointSchedule -Every 5 -Minute
 $BuildDataRefresh = New-UDEndpoint -Schedule $Schedule -Endpoint {
-$Cache:dataList = [System.Collections.Generic.List[pscustomobject]]::new()
+    $Cache:dataList = [System.Collections.Generic.List[pscustomobject]]::new()
 
     foreach ($project in $Cache:projectListSorted) {
         $BuildURI = "$uri/$($project.id)/_apis/build/builds?api-version=5.1"
@@ -25,7 +25,7 @@ $Cache:dataList = [System.Collections.Generic.List[pscustomobject]]::new()
             $Cache:dataList.Add(
                 [pscustomobject]@{
                     'ProjectId'   = $project.id
-                    'BuildNumber' = $build.buildNumber
+                    'BuildNumber' = (New-UDLink -Text $($build.buildNumber) -Url $($build._links.Web.href))
                     'StartTime'   = $build.StartTime
                     'FinishTime'  = $build.FinishTime
                     'Result'      = $build.result
@@ -41,20 +41,20 @@ $Cache:dataList = [System.Collections.Generic.List[pscustomobject]]::new()
 #region Dashboard components
 $projectSelect = New-UDSelect -Label "Project" -Id 'projectSelect' -Option {
     $SelectionList = [System.Collections.Generic.List[pscustomobject]]::new()
-    $default =[pscustomobject]@{
-        'Name' = 'Select Project'
+    $default = [pscustomobject]@{
+        'Name'  = 'Select Project'
         'Value' = 'default'
     }
     $SelectionList.Add($default)
     foreach ($project in $cache:projectListSorted) {
         $SelectionList.Add(
             [pscustomobject]@{
-                'Name' = $project.name
+                'Name'  = $project.name
                 'Value' = "$($project.id)"
             }
         )
     }
-    foreach($item in $SelectionList){
+    foreach ($item in $SelectionList) {
         New-UDSelectOption -Name $item.Name -Value $($item.Value)
     }
 } -OnChange {
@@ -62,7 +62,8 @@ $projectSelect = New-UDSelect -Label "Project" -Id 'projectSelect' -Option {
     Sync-UDElement -Id 'grid'
 }
 
-$grid = New-UDGrid -Id 'grid' -Title "Build Information" -Headers @('Build Number', 'Start Time', 'Finish Time', 'Result', 'Commit') -Properties @('BuildNumber', 'StartTime', 'FinishTime', 'Result', 'Commit') -Endpoint {
+
+$grid = New-UDGrid -Id 'grid' -Title "Build Information" -Headers @('Build Number', 'Result', 'Commit', 'Start Time', 'Finish Time') -Properties @('BuildNumber', 'Result', 'Commit', 'StartTime', 'FinishTime') -Endpoint {
     $Cache:dataList | Where-Object -Property 'Projectid' -EQ $Session:Projectid | Out-UDGridData
 }
 #endregion
