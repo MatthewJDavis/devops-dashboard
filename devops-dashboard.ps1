@@ -13,7 +13,7 @@ $Cache:projectListSorted = $projectList.value | Sort-Object -Property name
 #region update build data
 $Schedule = New-UDEndpointSchedule -Every 5 -Minute
 $BuildDataRefresh = New-UDEndpoint -Schedule $Schedule -Endpoint {
-    $Cache:dataList = [System.Collections.Generic.List[pscustomobject]]::new()
+$Cache:dataList = [System.Collections.Generic.List[pscustomobject]]::new()
 
     foreach ($project in $Cache:projectListSorted) {
         $BuildURI = "$uri/$($project.id)/_apis/build/builds?api-version=5.1"
@@ -51,7 +51,6 @@ $projectSelect = New-UDSelect -Label "Project" -Id 'projectSelect' -Option {
             }
         )
     }
-
     foreach($item in $SelectionList){
         New-UDSelectOption -Name $item.Name -Value $($item.Value)
     }
