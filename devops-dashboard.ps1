@@ -30,6 +30,7 @@ $BuildDataRefresh = New-UDEndpoint -Schedule $Schedule -Endpoint {
                     'FinishTime'  = $build.FinishTime
                     'Result'      = $build.result
                     'Commit'      = (New-UDLink -Text $($build.sourceVersion.Substring(0, 6)) -Url $($build._links.sourceVersionDisplayUri.href))
+                    'Badge'       = $build._links.badge.href
                 }
             )
         }
@@ -60,6 +61,18 @@ $projectSelect = New-UDSelect -Label "Project" -Id 'projectSelect' -Option {
 } -OnChange {
     $Session:Projectid = $eventData
     Sync-UDElement -Id 'grid'
+    Sync-UDElement -id 'Div1'
+}
+
+$card = New-UDElement -Tag div -Id "Div1" -Endpoint {
+    New-UDLayout -Columns 3 -Content {
+        New-UDCard -Id 'statusCard' -Title 'Current Status' -Content {
+            New-UDImage -Url ($Cache:dataList | Where-Object -Property 'ProjectID' -EQ $Session:Projectid | select-object -property Badge -First 1).badge
+        }
+        New-UDCard -Id 'buildCount' -Title 'Build Count' -Content {
+            New-UDParagraph -Text ($Cache:dataList | Where-Object -Property 'ProjectID' -EQ $Session:Projectid | Measure-Object ).Count
+        }
+    }
 }
 
 
@@ -69,5 +82,5 @@ $grid = New-UDGrid -Id 'grid' -Title "Build Information" -Headers @('Build Numbe
 #endregion
 
 
-$dashboard = New-UDDashboard -Title "Azure DevOps $OrgName" -Content { $projectSelect, $grid } -EndpointInitialization $Init
-Start-UDDashboard -Dashboard $dashboard -Endpoint $BuildDataRefresh -Port 10001
+$dashboard = New-UDDashboard -Title "Azure DevOps $OrgName" -Content { $projectSelect, $card, $grid } -EndpointInitialization $Init -Theme 'Azure'
+Start-UDDashboard -Dashboard $dashboard -Endpoint $BuildDataRefresh -Port 10002 
