@@ -82,5 +82,5 @@ $grid = New-UDGrid -Id 'grid' -Title "Build Information" -Headers @('Build Numbe
 #endregion
 
 
-$dashboard = New-UDDashboard -Title "Azure DevOps $OrgName" -Content { $projectSelect, $card, $grid } -EndpointInitialization $Init -Theme 'Azure'
+$dashboard = New-UDDashboard -Title "Azure DevOps $OrgName" -Content { $projectSelect, $card, $grid } -EndpointInitialization $Init
 Start-UDDashboard -Dashboard $dashboard -Endpoint $BuildDataRefresh -Port 10002 
