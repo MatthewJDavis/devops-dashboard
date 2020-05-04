@@ -1,12 +1,14 @@
 Task default -depends Analyse, Test
 
 Task Analyse -description 'Analyse script with PSScriptAnalyzer' {
-    'Running analyzer'
-    Invoke-ScriptAnalyzer -Path .\devops-dashboard.ps1 -Verbose
+    $saResults = Invoke-ScriptAnalyzer -Path .\devops-dashboard.ps1 -Severity @('Error', 'Warning')
+    if($saResults) {
+        $saResults | Format-Table
+        Write-Error -Message 'One or more Script Analyser errors/warnings were found'
+    }
 }
 
-Task Test -description 'Run pester tests ' {
-    'Running Unit Tests'
+Task Test -description 'Run Pester tests ' {
     $testResults = Invoke-Pester -Path $PSScriptRoot\Tests\Unit -PassThru
     if($testResults.FailedCount -gt 0) {
         $testResults | Format-List
