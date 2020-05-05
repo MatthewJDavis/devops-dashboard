@@ -80,6 +80,17 @@ function Start-DevOPsDashboard {
             New-UDCard -Id 'buildCount' -Title 'Build Count' -Content {
                 New-UDParagraph -Text ($Cache:dataList | Where-Object -Property 'ProjectID' -EQ $Session:Projectid | Measure-Object ).Count
             }
+            New-UDCard -Id 'successRate' -Title 'Success Rate' -Content {
+                $rate = 0
+                $result = ($Cache:dataList | Where-Object -Property 'ProjectID' -EQ $Session:Projectid | Select-Object -property 'Result').Result
+                $total = $result.count
+                $success = ($result | Group-Object | Where-Object -Property Name -eq 'succeeded').Count
+                if(-not $null -eq $Session:Projectid) {
+                    $rate = [math]::round($success / $total * 100, 2)
+                }
+                
+                New-UDParagraph -Text $rate
+            }
         }
     }
 
