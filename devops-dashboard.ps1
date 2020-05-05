@@ -75,7 +75,7 @@ function Start-DevOPsDashboard {
     $card = New-UDElement -Tag div -Id "Div1" -Endpoint {
         New-UDLayout -Columns 3 -Content {
             New-UDCard -Id 'statusCard' -Title 'Current Status' -Content {
-                New-UDImage -Url ($Cache:dataList | Where-Object -Property 'ProjectID' -EQ $Session:Projectid | Select-Object -property Badge -First 1).badge
+                New-UDParagraph -Text ($Cache:dataList | Where-Object -Property 'ProjectID' -EQ $Session:Projectid | Select-Object -property 'Result' -First 1).Result
             }
             New-UDCard -Id 'buildCount' -Title 'Build Count' -Content {
                 New-UDParagraph -Text ($Cache:dataList | Where-Object -Property 'ProjectID' -EQ $Session:Projectid | Measure-Object ).Count
