@@ -1,86 +1,95 @@
-$OrgName = 'matthewjdavis111'
-if ($null -eq $env:PAT) {
-    throw 'No Personal Access Token environment variable set. Set with $env:PAT="token"'
+function Test-ForAccessToken {
+    if ($null -eq $env:PAT) {
+        throw 'No Personal Access Token environment variable set. Set with $env:PAT="token"'
+    }
 }
-$PAToken = $env:PAT
-$uri = "https://dev.azure.com/$OrgName"
-$Headers = @{Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$($PAToken)")) }
-$Init = New-UDEndpointInitialization -Variable @('OrgName', 'PAToken', 'uri', 'Headers')
 
-#region projects
-$projectUri = "$uri/_apis/projects?api-version=2.0"
-$projectList = Invoke-RestMethod -Uri $projectUri -Method Get -Headers $Headers
-$Cache:projectListSorted = $projectList.value | Sort-Object -Property name
-#endregion
+function Start-DevOPsDashboard {
+    $OrgName = 'matthewjdavis111'
 
-#region update build data
-$Schedule = New-UDEndpointSchedule -Every 5 -Minute
-$BuildDataRefresh = New-UDEndpoint -Schedule $Schedule -Endpoint {
-    $Cache:dataList = [System.Collections.Generic.List[pscustomobject]]::new()
 
-    foreach ($project in $Cache:projectListSorted) {
-        $BuildURI = "$uri/$($project.id)/_apis/build/builds?api-version=5.1"
-        $buildList = Invoke-RestMethod -Uri $BuildURI -Headers $Headers
-        foreach ($build in $buildList.value) {
-            $Cache:dataList.Add(
+    Test-ForAccessToken
+
+    $PAToken = $env:PAT
+    $uri = "https://dev.azure.com/$OrgName"
+    $Headers = @{Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$($PAToken)")) }
+    $Init = New-UDEndpointInitialization -Variable @('OrgName', 'PAToken', 'uri', 'Headers')
+
+    #region projects
+    $projectUri = "$uri/_apis/projects?api-version=2.0"
+    $projectList = Invoke-RestMethod -Uri $projectUri -Method Get -Headers $Headers
+    $Cache:projectListSorted = $projectList.value | Sort-Object -Property name
+    #endregion
+
+    #region update build data
+    $Schedule = New-UDEndpointSchedule -Every 5 -Minute
+    $BuildDataRefresh = New-UDEndpoint -Schedule $Schedule -Endpoint {
+        $Cache:dataList = [System.Collections.Generic.List[pscustomobject]]::new()
+
+        foreach ($project in $Cache:projectListSorted) {
+            $BuildURI = "$uri/$($project.id)/_apis/build/builds?api-version=5.1"
+            $buildList = Invoke-RestMethod -Uri $BuildURI -Headers $Headers
+            foreach ($build in $buildList.value) {
+                $Cache:dataList.Add(
+                    [pscustomobject]@{
+                        'ProjectId'   = $project.id
+                        'BuildNumber' = (New-UDLink -Text $($build.buildNumber) -Url $($build._links.Web.href))
+                        'StartTime'   = $build.StartTime
+                        'FinishTime'  = $build.FinishTime
+                        'Result'      = $build.result
+                        'Commit'      = (New-UDLink -Text $($build.sourceVersion.Substring(0, 6)) -Url $($build._links.sourceVersionDisplayUri.href))
+                        'Badge'       = $build._links.badge.href
+                    }
+                )
+            }
+        }
+        Sync-UDElement -Id 'grid'
+    }
+    #endregion
+
+    #region Dashboard components
+    $projectSelect = New-UDSelect -Label "Project" -Id 'projectSelect' -Option {
+        $SelectionList = [System.Collections.Generic.List[pscustomobject]]::new()
+        $default = [pscustomobject]@{
+            'Name'  = 'Select Project'
+            'Value' = 'default'
+        }
+        $SelectionList.Add($default)
+        foreach ($project in $cache:projectListSorted) {
+            $SelectionList.Add(
                 [pscustomobject]@{
-                    'ProjectId'   = $project.id
-                    'BuildNumber' = (New-UDLink -Text $($build.buildNumber) -Url $($build._links.Web.href))
-                    'StartTime'   = $build.StartTime
-                    'FinishTime'  = $build.FinishTime
-                    'Result'      = $build.result
-                    'Commit'      = (New-UDLink -Text $($build.sourceVersion.Substring(0, 6)) -Url $($build._links.sourceVersionDisplayUri.href))
-                    'Badge'       = $build._links.badge.href
+                    'Name'  = $project.name
+                    'Value' = "$($project.id)"
                 }
             )
         }
+        foreach ($item in $SelectionList) {
+            New-UDSelectOption -Name $item.Name -Value $($item.Value)
+        }
+    } -OnChange {
+        $Session:Projectid = $eventData
+        Sync-UDElement -Id 'grid'
+        Sync-UDElement -id 'Div1'
     }
-    Sync-UDElement -Id 'grid'
-}
-#endregion
 
-#region Dashboard components
-$projectSelect = New-UDSelect -Label "Project" -Id 'projectSelect' -Option {
-    $SelectionList = [System.Collections.Generic.List[pscustomobject]]::new()
-    $default = [pscustomobject]@{
-        'Name'  = 'Select Project'
-        'Value' = 'default'
-    }
-    $SelectionList.Add($default)
-    foreach ($project in $cache:projectListSorted) {
-        $SelectionList.Add(
-            [pscustomobject]@{
-                'Name'  = $project.name
-                'Value' = "$($project.id)"
+    $card = New-UDElement -Tag div -Id "Div1" -Endpoint {
+        New-UDLayout -Columns 3 -Content {
+            New-UDCard -Id 'statusCard' -Title 'Current Status' -Content {
+                New-UDImage -Url ($Cache:dataList | Where-Object -Property 'ProjectID' -EQ $Session:Projectid | Select-Object -property Badge -First 1).badge
             }
-        )
-    }
-    foreach ($item in $SelectionList) {
-        New-UDSelectOption -Name $item.Name -Value $($item.Value)
-    }
-} -OnChange {
-    $Session:Projectid = $eventData
-    Sync-UDElement -Id 'grid'
-    Sync-UDElement -id 'Div1'
-}
-
-$card = New-UDElement -Tag div -Id "Div1" -Endpoint {
-    New-UDLayout -Columns 3 -Content {
-        New-UDCard -Id 'statusCard' -Title 'Current Status' -Content {
-            New-UDImage -Url ($Cache:dataList | Where-Object -Property 'ProjectID' -EQ $Session:Projectid | select-object -property Badge -First 1).badge
-        }
-        New-UDCard -Id 'buildCount' -Title 'Build Count' -Content {
-            New-UDParagraph -Text ($Cache:dataList | Where-Object -Property 'ProjectID' -EQ $Session:Projectid | Measure-Object ).Count
+            New-UDCard -Id 'buildCount' -Title 'Build Count' -Content {
+                New-UDParagraph -Text ($Cache:dataList | Where-Object -Property 'ProjectID' -EQ $Session:Projectid | Measure-Object ).Count
+            }
         }
     }
+
+
+    $grid = New-UDGrid -Id 'grid' -Title "Build Information" -Headers @('Build Number', 'Result', 'Commit', 'Start Time', 'Finish Time') -Properties @('BuildNumber', 'Result', 'Commit', 'StartTime', 'FinishTime') -Endpoint {
+        $Cache:dataList | Where-Object -Property 'Projectid' -EQ $Session:Projectid | Out-UDGridData
+    }
+    #endregion
+
+
+    $dashboard = New-UDDashboard -Title "Azure DevOps $OrgName" -Content { $projectSelect, $card, $grid } -EndpointInitialization $Init
+    Start-UDDashboard -Dashboard $dashboard -Endpoint $BuildDataRefresh -Port 10002 
 }
-
-
-$grid = New-UDGrid -Id 'grid' -Title "Build Information" -Headers @('Build Number', 'Result', 'Commit', 'Start Time', 'Finish Time') -Properties @('BuildNumber', 'Result', 'Commit', 'StartTime', 'FinishTime') -Endpoint {
-    $Cache:dataList | Where-Object -Property 'Projectid' -EQ $Session:Projectid | Out-UDGridData
-}
-#endregion
-
-
-$dashboard = New-UDDashboard -Title "Azure DevOps $OrgName" -Content { $projectSelect, $card, $grid } -EndpointInitialization $Init
-Start-UDDashboard -Dashboard $dashboard -Endpoint $BuildDataRefresh -Port 10002 
