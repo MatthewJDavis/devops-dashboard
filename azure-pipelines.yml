@@ -14,4 +14,4 @@ steps:
   inputs:
     filePath: 'build.ps1'
     arguments: 'Default'
-  displayName: 'Build Dashboard'
+  displayName: 'Run psake Analyse and test'
