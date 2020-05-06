@@ -9,7 +9,7 @@ function Start-DevOPsDashboard {
     $OrgName = 'matthewjdavis111'
     $PAToken = $env:PAT
     $uri = "https://dev.azure.com/$OrgName"
-    $Headers = @{Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$($PAToken)")) }
+    $Headers = @{Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($PAToken)) }
     $Init = New-UDEndpointInitialization -Variable @('OrgName', 'PAToken', 'uri', 'Headers')
 
     #region projects
