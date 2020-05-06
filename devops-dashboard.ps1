@@ -73,23 +73,34 @@ function Start-DevOPsDashboard {
     }
 
     $card = New-UDElement -Tag div -Id "Div1" -Endpoint {
+        if ($null -eq $Session:Projectid) {
+            $result = 0
+            $rate = 0
+        }
+        $result = ($Cache:dataList | Where-Object -Property 'ProjectID' -EQ $Session:Projectid | Select-Object -property 'Result' -First 1).Result 
+
         New-UDLayout -Columns 3 -Content {
-            New-UDCard -Id 'statusCard' -Title 'Current Status' -Content {
-                New-UDParagraph -Text ($Cache:dataList | Where-Object -Property 'ProjectID' -EQ $Session:Projectid | Select-Object -property 'Result' -First 1).Result
+            $backgroundColour = switch ($result) {
+                'succeeded' { 'green' }
+                'partiallySucceeded' { 'blue' }
+                'failed' { 'red' }
+                Default { 'white' }
             }
-            New-UDCard -Id 'buildCount' -Title 'Build Count' -Content {
-                New-UDParagraph -Text ($Cache:dataList | Where-Object -Property 'ProjectID' -EQ $Session:Projectid | Measure-Object ).Count
-            }
-            New-UDCard -Id 'successRate' -Title 'Success Rate' -Content {
-                $rate = 0
+            New-UDCard -Id 'statusCard' -Title 'Current Status' -BackgroundColor $backgroundColour -FontColor 'White' -Text $result
+            New-UDCard -Id 'buildCount' -Title 'Build Count' -BackgroundColor $backgroundColour -FontColor 'White' -Text ($Cache:dataList | Where-Object -Property 'ProjectID' -EQ $Session:Projectid | Measure-Object ).Count 
+            New-UDCard -Id 'successRate' -Title 'Success Rate' -BackgroundColor $backgroundColour -FontColor 'White' -Content {
                 $result = ($Cache:dataList | Where-Object -Property 'ProjectID' -EQ $Session:Projectid | Select-Object -property 'Result').Result
                 $total = $result.count
-                $success = ($result | Group-Object | Where-Object -Property Name -eq 'succeeded').Count
-                if(-not $null -eq $Session:Projectid) {
-                    $rate = [math]::round($success / $total * 100, 2)
+                if($total -gt 0) {
+                    $success = ($result | Group-Object | Where-Object -Property Name -eq 'succeeded').Count
+                    if (-not $null -eq $Session:Projectid) {
+                        $rate = [math]::round($success / $total * 100, 2)
+                    }
+                } else {
+                    $rate = 0
                 }
-                
-                New-UDParagraph -Text $rate
+
+                New-UDParagraph -Text $rate -Color 'White'
             }
         }
     }
