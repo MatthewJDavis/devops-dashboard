@@ -101,7 +101,6 @@ function Start-DevOPsDashboard {
     }
     #endregion
 
-
     $dashboard = New-UDDashboard -Title "Azure DevOps $OrgName" -Content { $projectSelect, $card, $grid } -EndpointInitialization $Init
     Start-UDDashboard -Dashboard $dashboard -Endpoint $BuildDataRefresh -Port 10002 
 }
