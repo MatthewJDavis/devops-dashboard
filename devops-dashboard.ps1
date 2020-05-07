@@ -4,7 +4,7 @@ function Test-ForAccessToken {
     }
 }
 
-function Start-DevOPsDashboard {
+function Start-BuildDashboard {
     Test-ForAccessToken
     $OrgName = 'matthewjdavis111'
     $PAToken = $env:PAT
