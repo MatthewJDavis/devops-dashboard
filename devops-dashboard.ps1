@@ -1,11 +1,11 @@
 function Test-ForAccessToken {
     if ($null -eq $env:PAT) {
-        throw 'No Personal Access Token environment variable set. Set with $env:PAT="token"'
+        throw 'No Personal Access Token environment variable set. Set with $env:pat = Read-Host'
     }
 }
 
 function Start-BuildDashboard {
-    Test-ForAccessToken
+    Test-ForAccessToken 
     $OrgName = 'matthewjdavis111'
     $PAToken = $env:PAT
     $uri = "https://dev.azure.com/$OrgName"
@@ -34,7 +34,6 @@ function Start-BuildDashboard {
                         'FinishTime'  = $build.FinishTime
                         'Result'      = $build.result
                         'Commit'      = (New-UDLink -Text $($build.sourceVersion.Substring(0, 6)) -Url $($build._links.sourceVersionDisplayUri.href))
-                        'Badge'       = $build._links.badge.href
                     }
                 )
             }
