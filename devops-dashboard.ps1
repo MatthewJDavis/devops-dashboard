@@ -71,36 +71,38 @@ function Start-BuildDashboard {
         $Session:Projectid = $eventData
         Sync-UDElement -Id 'grid'
         Sync-UDElement -id 'Div1'
-    }
+    } # end UDSelect
 
     $card = New-UDElement -Tag div -Id "Div1" -Endpoint {
         if ($null -eq $Session:Projectid) {
-            $result = '0'
-            $rate = '0'
+            # No project id yet so nothing to display - prevent divide by 0 errors for percentage
+            $latestResult = 'none'
+            $successRate = '0'
         }
-        $result = ($Cache:dataList | Where-Object -Property 'ProjectID' -EQ $Session:Projectid | Select-Object -property 'Result' -First 1).Result 
+        $latestResult = ($Cache:dataList | Where-Object -Property 'ProjectID' -EQ $Session:Projectid | Select-Object -property 'Result' -First 1).Result 
         $resultList = ($Cache:dataList | Where-Object -Property 'ProjectID' -EQ $Session:Projectid | Select-Object -property 'Result').Result
         $total = $resultList.count
         if ($total -gt 0) {
-            $success = ($resultList | Group-Object | Where-Object -Property Name -eq 'succeeded').Count
+            $success = ($resultList | Group-Object | Where-Object -Property Name -eq 'succeeded').Count # get how many builds were successful
             if (-not $null -eq $Session:Projectid) {
-                $rate = "$([math]::round($success / $total * 100, 2))" + '%'
+                $successRate = "$([math]::round($success / $total * 100, 2))" + '%' # calculate percentage of sucessful build to 2 decimal places
             }
         } else {
-            $rate = '0%'
+            $successRate = '0%'
         }
         New-UDLayout -Columns 3 -Content {
-            $backgroundColour = switch ($result) {
+            $backgroundColour = switch ($latestResult) {
                 'succeeded' { 'green' }
                 'partiallySucceeded' { 'blue' }
                 'failed' { 'red' }
                 Default { 'white' }
             }
-            New-UDCard -Id 'statusCard' -Title 'Current Status' -BackgroundColor $backgroundColour -FontColor 'White' -Text $result
+            New-UDCard -Id 'statusCard' -Title 'Current Status' -BackgroundColor $backgroundColour -FontColor 'White' -Text $latestResult
             New-UDCard -Id 'buildCount' -Title 'Build Count' -BackgroundColor $backgroundColour -FontColor 'White' -Text ($Cache:dataList | Where-Object -Property 'ProjectID' -EQ $Session:Projectid | Measure-Object ).Count 
-            New-UDCard -Id 'successRate' -Title 'Success Rate' -BackgroundColor $backgroundColour -FontColor 'White' -Text $rate
+            New-UDCard -Id 'successRate' -Title 'Success Rate' -BackgroundColor $backgroundColour -FontColor 'White' -Text $successRate
         }
-    }
+    } #end UDElement
+    
     $grid = New-UDGrid -Id 'grid' -Title "Build Information" -Headers @('Build Number', 'Result', 'Commit', 'Start Time', 'Finish Time') -Properties @('BuildNumber', 'Result', 'Commit', 'StartTime', 'FinishTime') -Endpoint {
         $Cache:dataList | Where-Object -Property 'Projectid' -EQ $Session:Projectid | Out-UDGridData
     }
