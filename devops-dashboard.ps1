@@ -5,6 +5,12 @@ function Test-ForAccessToken {
 }
 
 function Start-BuildDashboard {
+    [CmdletBinding()]
+    param (
+        [Parameter()]
+        [int]
+        $Port = 10002
+    )
     Test-ForAccessToken 
     $OrgName = 'matthewjdavis111'
     $PAToken = $env:PAT
@@ -101,5 +107,5 @@ function Start-BuildDashboard {
     #endregion
 
     $dashboard = New-UDDashboard -Title "Azure DevOps $OrgName" -Content { $projectSelect, $card, $grid } -EndpointInitialization $Init
-    Start-UDDashboard -Dashboard $dashboard -Endpoint $BuildDataRefresh -Port 10002 
+    Start-UDDashboard -Dashboard $dashboard -Endpoint $BuildDataRefresh -Port $Port 
 }
