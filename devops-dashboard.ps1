@@ -20,16 +20,12 @@ function Start-BuildDashboard {
     $Headers = @{Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$($PAToken)")) }
     $DashboardName = 'AzureDevOpsBuildDashboard'
     $Init = New-UDEndpointInitialization -Variable @('OrgName', 'PAToken', 'uri', 'Headers')
-    $ProjectRefresh = New-UDEndpointSchedule -Every 5 -Minute
     $BuildRefresh = New-UDEndpointSchedule -Every 5 -Minute
 
     #region projects
-    $projectDataRefresh = New-UDEndpoint -Schedule $ProjectRefresh -Endpoint {
-        $projectUri = "$uri/_apis/projects?api-version=2.0"
-        $projectList = Invoke-RestMethod -Uri $projectUri -Method Get -Headers $Headers
-        $Cache:projectListSorted = $projectList.value | Sort-Object -Property name
-        Sync-UDElement -Id 'projectSelect'
-    }
+    $projectUri = "$uri/_apis/projects?api-version=2.0"
+    $projectList = Invoke-RestMethod -Uri $projectUri -Method Get -Headers $Headers
+    $Cache:projectListSorted = $projectList.value | Sort-Object -Property name
     #endregion
 
     #region update project and build date
@@ -116,5 +112,5 @@ function Start-BuildDashboard {
     #endregion
 
     $dashboard = New-UDDashboard -Title "Azure DevOps $OrgName" -Content { $projectSelect, $card, $grid } -EndpointInitialization $Init
-    Start-UDDashboard -Dashboard $dashboard -Name $DashboardName -Endpoint @($buildDataRefresh, $projectDataRefresh) -Port $Port 
+    Start-UDDashboard -Dashboard $dashboard -Name $DashboardName -Endpoint @($buildDataRefresh) -Port $Port 
 }
