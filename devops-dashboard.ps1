@@ -16,6 +16,7 @@ function Start-BuildDashboard {
     $PAToken = $env:PAT
     $uri = "https://dev.azure.com/$OrgName"
     $Headers = @{Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$($PAToken)")) }
+    $DashboardName = 'AzureDevOpsBuildDashboard'
     $Init = New-UDEndpointInitialization -Variable @('OrgName', 'PAToken', 'uri', 'Headers')
     $ProjectRefresh = New-UDEndpointSchedule -Every 5 -Minute
     $BuildRefresh = New-UDEndpointSchedule -Every 5 -Minute
@@ -113,5 +114,5 @@ function Start-BuildDashboard {
     #endregion
 
     $dashboard = New-UDDashboard -Title "Azure DevOps $OrgName" -Content { $projectSelect, $card, $grid } -EndpointInitialization $Init
-    Start-UDDashboard -Dashboard $dashboard -Endpoint   @($buildDataRefresh, $projectDataRefresh) -Port $Port 
+    Start-UDDashboard -Dashboard $dashboard -Name $DashboardName -Endpoint @($buildDataRefresh, $projectDataRefresh) -Port $Port 
 }
