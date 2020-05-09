@@ -30,7 +30,7 @@ function Start-BuildDashboard {
         if ($_.exception -like "*could not be resolved*") {
             throw "Check Network connection. Error: $($_.exception.message)"
         } elseif ($_.exception.response.statuscode -eq 'NotFound') {
-            throw "Check OrgName $orgName is correct and Azure DevOps API is working correctly. Status code recieved: $($_.exception.response.statuscode)"
+            throw "Check OrgName $orgName is correct. Status code recieved: $($_.exception.response.statuscode)"
         } elseif ($_.exception.response.statuscode -eq 'Unauthorized') {
             throw "Check OrgName $orgName is correct,  Personal Access Token is correct, has read permissons to builds and has not expired. Status code recieved: $($_.exception.response.statuscode)"
         } else {
@@ -39,7 +39,15 @@ function Start-BuildDashboard {
     } catch {
         throw "$($_.Exception)"
     }
-    $Cache:projectListSorted = $projectList.value | Sort-Object -Property name
+
+    # final check to make sure we have a valid object and at least one project
+    if ($projectList.gettype().Name -ne 'PSCustomObject') {
+        throw "Did not get correct response from Azure DevOps API. Require 'PSCustomObject' but got $($projectList.gettype().Name) type. Check OrgName, Personal Access Token value, permissions and expiration"
+    } elseif ($projectList.count -lt 1) {
+        throw "No projects found in org $OrgName"
+    } else {
+        $Cache:projectListSorted = $projectList.value | Sort-Object -Property name
+    }
     #endregion
 
     #region update project and build date
