@@ -10,9 +10,9 @@ function Start-BuildDashboard {
         [Parameter()]
         [int]
         $Port = 10002,
-        [Parameter()]
+        [Parameter(Mandatory)]
         [string]
-        $OrgName = 'matthewjdavis111'
+        $OrgName
     )
     Test-ForAccessToken 
     $PAToken = $env:PAT
@@ -24,7 +24,21 @@ function Start-BuildDashboard {
 
     #region projects
     $projectUri = "$uri/_apis/projects?api-version=2.0"
-    $projectList = Invoke-RestMethod -Uri $projectUri -Method Get -Headers $Headers
+    try {
+        $projectList = Invoke-RestMethod -Uri $projectUri -Method Get -Headers $Headers
+    } catch [System.Net.WebException] {
+        if ($_.exception -like "*could not be resolved*") {
+            throw "Check Network connection. Error: $($_.exception.message)"
+        } elseif ($_.exception.response.statuscode -eq 'NotFound') {
+            throw "Check OrgName $orgName is correct and Azure DevOps API is working correctly. Status code recieved: $($_.exception.response.statuscode)"
+        } elseif ($_.exception.response.statuscode -eq 'Unauthorized') {
+            throw "Check OrgName $orgName is correct,  Personal Access Token is correct, has read permissons to builds and has not expired. Status code recieved: $($_.exception.response.statuscode)"
+        } else {
+            throw $_
+        }
+    } catch {
+        throw "$($_.Exception)"
+    }
     $Cache:projectListSorted = $projectList.value | Sort-Object -Property name
     #endregion
 
