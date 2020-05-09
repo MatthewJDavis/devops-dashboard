@@ -30,9 +30,9 @@ function Start-BuildDashboard {
         if ($_.exception -like "*could not be resolved*") {
             throw "Check Network connection. Error: $($_.exception.message)"
         } elseif ($_.exception.response.statuscode -eq 'NotFound') {
-            throw "Check OrgName $orgName is correct. Status code recieved: $($_.exception.response.statuscode)"
+            throw "Check OrgName $orgName is correct. Status code received: $($_.exception.response.statuscode)"
         } elseif ($_.exception.response.statuscode -eq 'Unauthorized') {
-            throw "Check OrgName $orgName is correct,  Personal Access Token is correct, has read permissons to builds and has not expired. Status code recieved: $($_.exception.response.statuscode)"
+            throw "Check OrgName $orgName is correct,  Personal Access Token is correct, has read permissions to builds and has not expired. Status code received: $($_.exception.response.statuscode)"
         } else {
             throw $_
         }
