@@ -9,10 +9,12 @@ function Start-BuildDashboard {
     param (
         [Parameter()]
         [int]
-        $Port = 10002
+        $Port = 10002,
+        [Parameter()]
+        [string]
+        $OrgName = 'matthewjdavis111'
     )
     Test-ForAccessToken 
-    $OrgName = 'matthewjdavis111'
     $PAToken = $env:PAT
     $uri = "https://dev.azure.com/$OrgName"
     $Headers = @{Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$($PAToken)")) }
