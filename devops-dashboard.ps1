@@ -46,14 +46,14 @@ function Start-BuildDashboard {
     } elseif ($projectList.count -lt 1) {
         throw "No projects found in org $OrgName"
     } else {
-        $Cache:projectListSorted = $projectList.value | Sort-Object -Property name
+        $projectListSorted = $projectList.value | Sort-Object -Property name
     }
     #endregion
 
     #region update project and build date
     $buildDataRefresh = New-UDEndpoint -Schedule $BuildRefresh -Endpoint {
         $Cache:dataList = [System.Collections.Generic.List[pscustomobject]]::new()
-        foreach ($project in $Cache:projectListSorted) {
+        foreach ($project in $projectListSorted) {
             $BuildURI = "$uri/$($project.id)/_apis/build/builds?api-version=5.1"
             $buildList = Invoke-RestMethod -Uri $BuildURI -Headers $Headers
             foreach ($build in $buildList.value) {
@@ -81,7 +81,7 @@ function Start-BuildDashboard {
             'Value' = 'default'
         }
         $SelectionList.Add($default)
-        foreach ($project in $cache:projectListSorted) {
+        foreach ($project in $projectListSorted) {
             $SelectionList.Add(
                 [pscustomobject]@{
                     'Name'  = $project.name
