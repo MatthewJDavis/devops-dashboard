@@ -22,7 +22,7 @@ function Start-BuildDashboard {
     $Init = New-UDEndpointInitialization -Variable @('OrgName', 'PAToken', 'uri', 'Headers')
     $BuildRefresh = New-UDEndpointSchedule -Every 5 -Minute
 
-    #region projects
+    #region get project data
     $projectUri = "$uri/_apis/projects?api-version=2.0"
     try {
         $projectList = Invoke-RestMethod -Uri $projectUri -Method Get -Headers $Headers
@@ -50,7 +50,7 @@ function Start-BuildDashboard {
     }
     #endregion
 
-    #region update project and build date
+    #region update build data endpoint every 5 minutes and cache results.
     $buildDataRefresh = New-UDEndpoint -Schedule $BuildRefresh -Endpoint {
         $Cache:dataList = [System.Collections.Generic.List[pscustomobject]]::new()
         foreach ($project in $projectListSorted) {
